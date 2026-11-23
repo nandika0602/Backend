@@ -4,13 +4,18 @@ const User = require("./models/user");
 
 const app = express();
 
+app.use(express.json()); //like a handler, call before all the APIs irrespective of methods
+
 app.post("/signup", async (req, res) => {
-  const user = new User({
-    firstName: "Nandy",
-    lastName: "Rajan",
-    emailId: "abc@gail.com",
-    password: "abc@123",
-  });
+  console.log(req.body);
+
+  // const user = new User({
+  //   firstName: "Nandy",
+  //   lastName: "Rajan",
+  //   emailId: "abc@gail.com",
+  //   password: "abc@123",
+  // });
+  const user = new User(req.body);
   // creating a new instance of the User model
   // const user = new User(userObj);
   try {

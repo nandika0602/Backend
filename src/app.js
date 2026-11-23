@@ -38,6 +38,25 @@ app.post("/signup", async (req, res) => {
   }
 });
 
+app.post("/login", async (req, res) => {
+  try {
+    const { emailId, password } = req.body;
+    const user = await User.find({ emailId: emailId });
+    if (!user) {
+      throw new Error("Invalid Creds");
+    }
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (isPasswordValid) {
+      res.send("Login Successfully");
+    } else {
+      throw new Error("Invalid Creds");
+    }
+  } catch (err) {
+    res.status(400).send("Error saving the user:" + err.message);
+  }
+});
+
 app.get("/user", async (req, res) => {
   console.log(req.body);
 

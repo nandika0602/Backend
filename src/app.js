@@ -1,25 +1,36 @@
 const express = require("express");
 const connectDB = require("./config/database");
 const User = require("./models/user");
-const user = require("./models/user");
-
+const { validateSignUpData } = require("./utils/validation");
 const app = express();
+const bcrypt = require("bcrypt");
 
 app.use(express.json()); //like a handler, call before all the APIs irrespective of methods
 
 app.post("/signup", async (req, res) => {
   console.log(req.body);
-
-  // const user = new User({
-  //   firstName: "Nandy",
-  //   lastName: "Rajan",
-  //   emailId: "abc@gail.com",
-  //   password: "abc@123",
-  // });
-  const user = new User(req.body);
-  // creating a new instance of the User model
-  // const user = new User(userObj);
   try {
+    //Validation of Data
+    validateSignUpData(req);
+    // Encrypt the Password
+    const { firstName, lastName, emailId, password } = req.password;
+    const passwordHash = bcrypt.hash(password, 10);
+    console.log(passwordHash);
+    // const user = new User({
+    //   firstName: "Nandy",
+    //   lastName: "Rajan",
+    //   emailId: "abc@gail.com",
+    //   password: "abc@123",
+    // });
+    const user = new User({
+      firstName,
+      lastName,
+      emailId,
+      password: passwordHash,
+    });
+    // creating a new instance of the User model
+    // const user = new User(userObj);
+
     await user.save(); // return a promise
     res.send("User Added Successfully");
   } catch (err) {

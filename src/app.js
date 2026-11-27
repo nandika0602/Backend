@@ -6,6 +6,7 @@ const app = express();
 const bcrypt = require("bcrypt");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
+const { userAuth } = require("./middleware/auth");
 
 app.use(express.json()); //like a handler, call before all the APIs irrespective of methods
 app.use(cookieParser());
@@ -48,15 +49,18 @@ app.post("/login", async (req, res) => {
     if (!user) {
       throw new Error("Invalid Creds");
     }
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    // const isPasswordValid = await bcrypt.compare(password, user.password);
+    const isPasswordValid = await user.validatePassword(password);
 
     if (isPasswordValid) {
       //create a JWT Token
-      const token = await jwt.sign({ _id: user._id }, "secretkey");
+      const token = await user.getJWT();
       console.log(token);
 
       //Add the token to cookie and send the response back to the user
-      res.cookie("toeken", token); //can see it in postman once we login
+      res.cookie("token", token, {
+        expires: new Date(Date.now() + 8 * 3600000),
+      }); //can see it in postman once we login
       res.send("Login Successfully");
     } else {
       throw new Error("Invalid Creds");
@@ -66,30 +70,13 @@ app.post("/login", async (req, res) => {
   }
 });
 
-app.post("/profile", async (req, res) => {
+app.post("/profile", userAuth, async (req, res) => {
   try {
     const cookies = req.cookies;
-
-    const { token } = cookies;
-
-    //Validate my token
-
-    if (!token) {
-      throw new Error("Invalid Token");
-    }
-
-    const decodedMessage = await jwt.verify(token, "secretkey");
-    console.log(decodedMessage);
-
-    const { _id } = decodedMessage;
-    console.log("Logged in User is", _id);
-
     console.log(cookies); // undefined - to read it we need middleware/npm library
 
-    const user = await User.findById(_id);
-    if (!user) {
-      throw new Error("User not found");
-    }
+    const user = req.user;
+
     res.send("Reading", user);
   } catch (err) {
     console.log(err);
